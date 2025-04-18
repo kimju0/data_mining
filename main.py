@@ -1,9 +1,9 @@
 # temporal const variable
-from sqlite3.dbapi2 import apilevel
+from itertools import combinations
 
-INPUT_FILE_NAME = "test.txt"
+INPUT_FILE_NAME = "input.txt"
 OUTPUT_FILE_NAME = "output.txt"
-MIN_SUPPORT = 2
+MIN_SUPPORT = 35
 
 
 # return format: [(7, 14), (9), ...]
@@ -15,14 +15,6 @@ def read_input_file():
             datas.append(tuple(data))
     return datas
 
-
-# 강의자료 수도코드
-# DO: Scan DB once to get frequent 1-itemsets
-# REPEAT
-# (Candidate Generation) Generate length-(k+1) candidates from length-k frequent itemsets
-# (Candidate test) Test the candidates against DB if they are frequent or not
-# UNTIL: No more frequent candidate itemset can be generated
-# RETURN: all the obtained frequent itemsets
 
 # table contains all of frequent itemsets, table = [1-frequent_itemset, 2-frequent_itemset, ...]
 # each frequent_itemset contains the count of each itemset, x-frequent_itemset = {itemset1: count, itemset2: count, ...}
@@ -67,5 +59,19 @@ def apriori(datas, min_support):
 
     return table
 
-print(read_input_file())
-print(apriori(read_input_file(), MIN_SUPPORT))
+
+# table contains all association rules, table = [1-association_rule, 2-association_rule, ...]
+# each association_rule contains the values of support, confidence, x-association_rule = {association_rule: (itemset1, itemset2), support: support, confidence: confidence}
+# each association_rule is a tuple of itemsets, (itemset1, itemset2)
+def make_association_rules(datas):
+    table = []
+    for frequent_itemset in datas:
+        for itemset in frequent_itemset:
+            # 여기서 부분 집합들 찾고 값 계산
+            # 이 집합을 두 부분으로 나누기
+            for r in range(len(frequent_itemset[itemset])):
+                combinations(itemset, r)
+                
+# print(read_input_file())
+# print(apriori(read_input_file(), MIN_SUPPORT))
+print(make_association_rules(read_input_file()))
