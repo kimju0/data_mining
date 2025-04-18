@@ -1,9 +1,10 @@
 # temporal const variable
 from itertools import combinations
+from math import remainder
 
 INPUT_FILE_NAME = "input.txt"
 OUTPUT_FILE_NAME = "output.txt"
-MIN_SUPPORT = 35
+MIN_SUPPORT = 15
 
 
 # return format: [(7, 14), (9), ...]
@@ -63,15 +64,27 @@ def apriori(datas, min_support):
 # table contains all association rules, table = [1-association_rule, 2-association_rule, ...]
 # each association_rule contains the values of support, confidence, x-association_rule = {association_rule: (itemset1, itemset2), support: support, confidence: confidence}
 # each association_rule is a tuple of itemsets, (itemset1, itemset2)
-def make_association_rules(datas):
+def make_association_rules(datas, N):
     table = []
     for frequent_itemset in datas:
         for itemset in frequent_itemset:
-            # 여기서 부분 집합들 찾고 값 계산
-            # 이 집합을 두 부분으로 나누기
-            for r in range(len(frequent_itemset[itemset])):
-                combinations(itemset, r)
-                
+            for r in range(1, len(itemset)):
+                for subset in combinations(itemset, r):
+                    subset = tuple(sorted(subset))
+                    remaining_items = tuple(sorted(set(itemset) - set(subset)))
+                    support = frequent_itemset[itemset] / N
+                    confidence = frequent_itemset[itemset] / datas[len(subset) - 1][subset]
+                    table.append({
+                        'association_rule': (subset, remaining_items),
+                        'support': support,
+                        'confidence': confidence
+                    })
+
+    return table
+
+
 # print(read_input_file())
 # print(apriori(read_input_file(), MIN_SUPPORT))
-print(make_association_rules(read_input_file()))
+datas = read_input_file()
+N = len(datas)
+print(make_association_rules(apriori(datas, MIN_SUPPORT), N))
