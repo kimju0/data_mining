@@ -83,8 +83,17 @@ def make_association_rules(datas, N):
     return table
 
 
+# make and write the output file
+def write_output_file(table):
+    with open(OUTPUT_FILE_NAME, 'w') as file:
+        for item in table:
+            file.write(
+                f"Association Rule: {item['association_rule']}, Support: {round(item['support'] * 100, 2)}, Confidence: {round(item['confidence'] * 100, 2)}\n")
+
+
 # print(read_input_file())
 # print(apriori(read_input_file(), MIN_SUPPORT))
 datas = read_input_file()
 N = len(datas)
 print(make_association_rules(apriori(datas, MIN_SUPPORT), N))
+write_output_file(make_association_rules(apriori(datas, MIN_SUPPORT), N))
