@@ -1,2 +1,2 @@
-run: main.py
-	python3 main.py 15 input.txt output.txt
+run: apriori.py
+	python3 apriori.py 5 input.txt output.txt

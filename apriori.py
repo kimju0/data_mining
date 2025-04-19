@@ -1,4 +1,3 @@
-# temporal const variable
 from itertools import combinations
 import sys
 
