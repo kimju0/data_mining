@@ -2,12 +2,12 @@
 from itertools import combinations
 import sys
 
-if len(sys.argv) != 3:
-    print("Usage: python main.py <input_file> <output_file>")
+if len(sys.argv) != 4:
+    print("Usage: python main.py <min_support> <input_file> <output_file>")
     sys.exit(1)
-INPUT_FILE_NAME = sys.argv[1]
-OUTPUT_FILE_NAME = sys.argv[2]
-MIN_SUPPORT = 15
+MIN_SUPPORT = int(sys.argv[1])
+INPUT_FILE_NAME = sys.argv[2]
+OUTPUT_FILE_NAME = sys.argv[3]
 
 
 # return format: [(7, 14), (9), ...]
