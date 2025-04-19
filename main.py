@@ -1,9 +1,12 @@
 # temporal const variable
 from itertools import combinations
-from math import remainder
+import sys
 
-INPUT_FILE_NAME = "input.txt"
-OUTPUT_FILE_NAME = "output.txt"
+if len(sys.argv) != 3:
+    print("Usage: python main.py <input_file> <output_file>")
+    sys.exit(1)
+INPUT_FILE_NAME = sys.argv[1]
+OUTPUT_FILE_NAME = sys.argv[2]
 MIN_SUPPORT = 15
 
 
@@ -14,7 +17,7 @@ def read_input_file():
         for line in file:
             data = sorted(list(map(int, line.strip().split())))
             datas.append(tuple(data))
-    return datas
+    return datas, len(datas)
 
 
 # table contains all of frequent itemsets, table = [1-frequent_itemset, 2-frequent_itemset, ...]
@@ -57,7 +60,6 @@ def apriori(datas, min_support):
                 if count >= min_support:
                     next_frequent_itemset[merged_itemset] = count
         cur_frequent_itemset = next_frequent_itemset
-
     return table
 
 
@@ -83,17 +85,27 @@ def make_association_rules(datas, N):
     return table
 
 
+def format_table(table):
+    formatted_table = []
+    for item in table:
+        A, B = item['association_rule']
+        sup = item['support'] * 100
+        conf = item['confidence'] * 100
+        rule = f"{{{', '.join(map(str, A))}}}\t{{{', '.join(map(str, B))}}}\t{sup:.2f}\t{conf:.2f}\n"
+        formatted_table.append(rule)
+    return formatted_table
+
+
 # make and write the output file
-def write_output_file(table):
+def write_output_file(formatted_res):
     with open(OUTPUT_FILE_NAME, 'w') as file:
-        for item in table:
-            file.write(
-                f"Association Rule: {item['association_rule']}, Support: {round(item['support'] * 100, 2)}, Confidence: {round(item['confidence'] * 100, 2)}\n")
+        for item in formatted_res:
+            file.write(item)
 
 
-# print(read_input_file())
-# print(apriori(read_input_file(), MIN_SUPPORT))
-datas = read_input_file()
-N = len(datas)
-print(make_association_rules(apriori(datas, MIN_SUPPORT), N))
-write_output_file(make_association_rules(apriori(datas, MIN_SUPPORT), N))
+datas, N = read_input_file()
+tables = apriori(datas, MIN_SUPPORT)
+association_results = make_association_rules(apriori(datas, MIN_SUPPORT), N)
+formatted_res = format_table(association_results)
+write_output_file(formatted_res)
+print("Output file written successfully.")
