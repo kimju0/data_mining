@@ -5,11 +5,11 @@ from math import log2
 # if len(sys.argv) != 4:
 #     print("Usage: python decision_tree.py <train_file> <test_file> <result_file>")
 #     sys.exit(1)
-TRAIN_FILE_NAME = "dt_train2.txt"  # sys.argv[1]
-TEST_FILE_NAME = "dt_test2.txt"  # sys.argv[2]
+TRAIN_FILE_NAME = "dt_train1.txt"  # sys.argv[1]
+TEST_FILE_NAME = "dt_test1.txt"  # sys.argv[2]
 RESULT_FILE_NAME = "dt_answer10.txt"  # sys.argv[3]
-ANSWER_FILE_NAME = "dt_answer2.txt"
-MAX_DEPTH = 10
+ANSWER_FILE_NAME = "dt_answer1.txt"
+MAX_DEPTH = 15
 
 
 class Node:
@@ -24,40 +24,34 @@ class Node:
 
 
 class DecisionTree:
-    def __init__(self, data, attributes):
-        self.root = self.build_tree(data, attributes, 0)
+    def __init__(self, data):
+        self.root = self.build_tree(data, 0)
 
-    def build_tree(self, data, attributes, depth):
-        # 모두 같은 레이블인 경우 리프 노드 반환
+    def build_tree(self, data, depth):
         labels = [row[-1] for row in data]
+        most_common_label = Counter(labels).most_common(1)[0][0]
+
+        # 모두 같은 레이블인 경우 리프 노드 반환
         if len(set(labels)) == 1:
             return Node(label=labels[0], depth=depth)
 
-        most_common_label = Counter(labels).most_common(1)[0][0]
-
-        # 더이상 분할하지 못하면 리프 노트 반환
-        if sum(attr_flag) == 0:
+        # 더이상 분할하지 못하면 리프 노드 반환
+        if sum(attr_flag) == 0 or depth >= MAX_DEPTH:
             return Node(label=most_common_label, depth=depth)
 
-        # 최대 깊이에 도달한 경우 리프 노드 반환
-        if depth >= MAX_DEPTH:
-            return Node(label=most_common_label, depth=depth)
-
-        gains = [gain_ratio(data, i) for i in range(len(attributes))]
+        gains = [gain_ratio(data, i) for i in range(len(attribute))]
         best_attribute_index = gains.index(max(gains))
 
         node = Node(attribute=best_attribute_index, depth=depth)
 
         # data 분할
-        attribute_values = set(row[best_attribute_index] for row in data)
-        for value in attribute_values:
+        for value in attr_values[best_attribute_index]:
             subset = [row for row in data if row[best_attribute_index] == value]
             if not subset or attr_flag[best_attribute_index] == 0:
                 node.children[value] = Node(label=most_common_label, depth=depth + 1)
-                continue
             else:
                 attr_flag[best_attribute_index] = 0
-                child_node = self.build_tree(data, attributes, depth + 1)
+                child_node = self.build_tree(subset, depth + 1)
                 node.children[value] = child_node
                 attr_flag[best_attribute_index] = 1
 
@@ -160,7 +154,10 @@ train_data = read_data(TRAIN_FILE_NAME)
 attribute, train_data = train_data[0][:-1], train_data[1:]
 attr_flag = [1] * len(attribute)
 test_data = read_data(TEST_FILE_NAME)[1:]
-tree = DecisionTree(train_data, attribute)
+attr_values = [set(row[i] for row in train_data) for i in range(len(attribute))]
+
+tree = DecisionTree(train_data)
+
 predictions = [tree.classify(sample) for sample in test_data]
 for i in range(len(test_data)):
     test_data[i].append(predictions[i])
