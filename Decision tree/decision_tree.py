@@ -2,13 +2,13 @@ import sys
 from collections import Counter
 from math import log2
 
-# if len(sys.argv) != 4:
-#     print("Usage: python decision_tree.py <train_file> <test_file> <result_file>")
-#     sys.exit(1)
-TRAIN_FILE_NAME = "dt_train1.txt"  # sys.argv[1]
-TEST_FILE_NAME = "dt_test1.txt"  # sys.argv[2]
-RESULT_FILE_NAME = "dt_answer10.txt"  # sys.argv[3]
-ANSWER_FILE_NAME = "dt_answer1.txt"
+if len(sys.argv) != 4:
+    print("Usage: python decision_tree.py <train_file> <test_file> <result_file>")
+    sys.exit(1)
+TRAIN_FILE_NAME = sys.argv[1]
+TEST_FILE_NAME = sys.argv[2]
+RESULT_FILE_NAME = sys.argv[3]
+# ANSWER_FILE_NAME = "dt_answer2.txt"
 MAX_DEPTH = 15
 
 
@@ -139,15 +139,15 @@ def gain_ratio(data, attribute_index):
     return (total_entropy - weighted_entropy) / split_info
 
 
-def print_accuracy():
-    A = read_data(ANSWER_FILE_NAME)[1:]
-    R = read_data(RESULT_FILE_NAME)
-    correct_count = 0
-    for i in range(len(A)):
-        if A[i][-1] == R[i][-1]:
-            correct_count += 1
-    accuracy = correct_count / len(A) * 100
-    print(f"Accuracy: {accuracy}")
+# def print_accuracy():
+#     A = read_data(ANSWER_FILE_NAME)
+#     R = read_data(RESULT_FILE_NAME)
+#     correct_count = 0
+#     for i in range(len(A)):
+#         if A[i][-1] == R[i][-1]:
+#             correct_count += 1
+#     accuracy = correct_count / len(A) * 100
+#     print(f"Accuracy: {accuracy}")
 
 
 train_data = read_data(TRAIN_FILE_NAME)
@@ -162,6 +162,6 @@ predictions = [tree.classify(sample) for sample in test_data]
 for i in range(len(test_data)):
     test_data[i].append(predictions[i])
 tree.print_tree()
-write_data(RESULT_FILE_NAME, test_data)
+write_data(RESULT_FILE_NAME, [attribute] + test_data)
 
-print_accuracy()
+# print_accuracy()
