@@ -5,9 +5,11 @@ from math import log2
 # if len(sys.argv) != 4:
 #     print("Usage: python decision_tree.py <train_file> <test_file> <result_file>")
 #     sys.exit(1)
-TRAIN_FILE_NAME = "dt_train1.txt"  # sys.argv[1]
-TEST_FILE_NAME = "dt_test1.txt"  # sys.argv[2]
+TRAIN_FILE_NAME = "dt_train2.txt"  # sys.argv[1]
+TEST_FILE_NAME = "dt_test2.txt"  # sys.argv[2]
 RESULT_FILE_NAME = "dt_answer10.txt"  # sys.argv[3]
+ANSWER_FILE_NAME = "dt_answer2.txt"
+MAX_DEPTH = 10
 
 
 class Node:
@@ -23,36 +25,41 @@ class Node:
 
 class DecisionTree:
     def __init__(self, data, attributes):
-        self.root = self.build_tree(data, attributes)
+        self.root = self.build_tree(data, attributes, 0)
 
-    def build_tree(self, data, attributes):
-        if not data:
-            return None
-
-        # Check if all samples have the same label
+    def build_tree(self, data, attributes, depth):
+        # 모두 같은 레이블인 경우 리프 노드 반환
         labels = [row[-1] for row in data]
         if len(set(labels)) == 1:
-            return Node(label=labels[0])
+            return Node(label=labels[0], depth=depth)
 
-        # If no attributes left, return the most common label
-        if not attributes:
-            most_common_label = Counter(labels).most_common(1)[0][0]
-            return Node(label=most_common_label)
+        most_common_label = Counter(labels).most_common(1)[0][0]
 
-        # Find the best attribute to split on
+        # 더이상 분할하지 못하면 리프 노트 반환
+        if sum(attr_flag) == 0:
+            return Node(label=most_common_label, depth=depth)
+
+        # 최대 깊이에 도달한 경우 리프 노드 반환
+        if depth >= MAX_DEPTH:
+            return Node(label=most_common_label, depth=depth)
+
         gains = [gain_ratio(data, i) for i in range(len(attributes))]
         best_attribute_index = gains.index(max(gains))
 
-        # Create a new node for the best attribute
-        node = Node(attribute=best_attribute_index)
+        node = Node(attribute=best_attribute_index, depth=depth)
 
-        # Split the data based on the best attribute
+        # data 분할
         attribute_values = set(row[best_attribute_index] for row in data)
         for value in attribute_values:
             subset = [row for row in data if row[best_attribute_index] == value]
-            new_attributes = attributes[:best_attribute_index] + attributes[best_attribute_index + 1:]
-            child_node = self.build_tree(subset, new_attributes)
-            node.children[value] = child_node
+            if not subset or attr_flag[best_attribute_index] == 0:
+                node.children[value] = Node(label=most_common_label, depth=depth + 1)
+                continue
+            else:
+                attr_flag[best_attribute_index] = 0
+                child_node = self.build_tree(data, attributes, depth + 1)
+                node.children[value] = child_node
+                attr_flag[best_attribute_index] = 1
 
         return node
 
@@ -62,8 +69,19 @@ class DecisionTree:
             attribute_value = sample[current_node.attribute]
             current_node = current_node.children.get(attribute_value)
             if current_node is None:
-                return None  # If no child exists for this attribute value
+                return None
         return current_node.label
+
+    def print_tree(self, node=None, depth=0):
+        if node is None:
+            node = self.root
+        if node.is_leaf():
+            print("\t" * depth + f"Leaf: {node.label} (depth {node.depth})")
+        else:
+            print("\t" * depth + f"Node: {node.attribute} (depth {node.depth})")
+            for value, child in node.children.items():
+                print("\t" * (depth + 1) + f"Value: {value}")
+                self.print_tree(child, depth + 2)
 
 
 def read_data(file_name):
@@ -76,7 +94,7 @@ def read_data(file_name):
 def write_data(file_name, data):
     with open(file_name, 'w') as file:
         for line in data:
-            file.write(' '.join(line) + '\n')
+            file.write('\t'.join(line) + '\n')
 
 
 # format of data: [sample1, sample2, ..., sampleN]
@@ -97,6 +115,8 @@ def entropy(data):
 
 
 def gain_ratio(data, attribute_index):
+    if attr_flag[attribute_index] == 0:
+        return 0
     total_entropy = entropy(data)
     total_count = len(data)
 
@@ -125,6 +145,26 @@ def gain_ratio(data, attribute_index):
     return (total_entropy - weighted_entropy) / split_info
 
 
+def print_accuracy():
+    A = read_data(ANSWER_FILE_NAME)[1:]
+    R = read_data(RESULT_FILE_NAME)
+    correct_count = 0
+    for i in range(len(A)):
+        if A[i][-1] == R[i][-1]:
+            correct_count += 1
+    accuracy = correct_count / len(A) * 100
+    print(f"Accuracy: {accuracy}")
+
+
 train_data = read_data(TRAIN_FILE_NAME)
-attribute, train_data = train_data[0], train_data[1:]
+attribute, train_data = train_data[0][:-1], train_data[1:]
+attr_flag = [1] * len(attribute)
 test_data = read_data(TEST_FILE_NAME)[1:]
+tree = DecisionTree(train_data, attribute)
+predictions = [tree.classify(sample) for sample in test_data]
+for i in range(len(test_data)):
+    test_data[i].append(predictions[i])
+tree.print_tree()
+write_data(RESULT_FILE_NAME, test_data)
+
+print_accuracy()
