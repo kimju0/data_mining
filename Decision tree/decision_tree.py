@@ -161,7 +161,8 @@ tree = DecisionTree(train_data)
 predictions = [tree.classify(sample) for sample in test_data]
 for i in range(len(test_data)):
     test_data[i].append(predictions[i])
-tree.print_tree()
+# tree.print_tree()
 write_data(RESULT_FILE_NAME, [attribute] + test_data)
+print("Decision tree built and results written to", RESULT_FILE_NAME)
 
 # print_accuracy()
